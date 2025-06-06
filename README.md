@@ -13,7 +13,7 @@
 Neural Networks Classifier and the Naive Bayes Classifier are implemented from scratch. SVMs Classifier will use the sklearn model. 
 
 ## TO DO
-- Research the 4th classifier (if we want to take on another one)
+- Research the 4th classifier (if we want to take on another one) ... Gradient Boosting?
 - Split up how we want to divide the work -- 1 person each model?
 - Determine standardized performance metrics to measure for each model
 - Add findings to the presentation
