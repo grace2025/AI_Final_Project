@@ -2,14 +2,18 @@
 
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
+from preprocessing import transform_data, preprocess_data
 
-df = pd.read_csv('songs_clean.csv')
+
+df_clean = transform_data('songs.csv', 'genre')
+
 
 features = ['duration_ms', 'popularity', 'danceability', 'energy', 'loudness', 
            'speechiness', 'acousticness', 'instrumentalness', 'liveness', 
            'valence', 'tempo']
 
-scaler = StandardScaler()
-df[features] = scaler.fit_transform(df[features])
+X = df_clean[features]
+y = df_clean['genre']
 
-print(df['genre'].value_counts())
+X_train, X_test, y_train, y_test = preprocess_data(X, y)
+
