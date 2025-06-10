@@ -4,7 +4,9 @@ import numpy as np
 data = pd.read_csv("songs.csv")
 
 attributes = data.columns.tolist()
-data['genre_list'] = data['genre'].apply(lambda x: [g.strip() for g in x.split(',')])
+data['genre_list'] = data['genre'].apply(
+    lambda x: [g.strip() for g in x.split(',') if g.strip() and g.strip() != 'set()']
+)
 all_genres = set(g for genres in data['genre_list'] for g in genres)
 
 comparable_attributes = attributes
@@ -75,6 +77,43 @@ for genre in genre_attribute_table:
             genre_attribute_table[genre][attr] = [0 for _ in bin_counts]
 
 
-for genre in genre_attribute_table: 
-    print(f"{genre}: {genre_attribute_table[genre]['explicit']}")
+def predict_genre_probabilities(song):
+    genre_probs = {}
 
+    for genre in genre_attribute_table:
+        prob = 1.0
+        for attr in comparable_attributes:
+            attr_val = song[attr]
+            bin_idx = find_bin(attr_val, bins[attr])
+            bin_probs = genre_attribute_table[genre][attr]
+
+            # Avoid multiplying by zero
+            bin_idx = int(bin_idx)
+            attr_prob = bin_probs[bin_idx] if bin_probs[bin_idx] > 0 else .000001
+            prob *= attr_prob
+        
+        genre_probs[genre] = prob
+
+    # Normalize to get probabilities
+    total_prob = sum(genre_probs.values())
+    if total_prob > 0:
+        for genre in genre_probs:
+            genre_probs[genre] = round(genre_probs[genre] / total_prob, 6)
+    else:
+        for genre in genre_probs:
+            genre_probs[genre] = 0.0
+
+    return genre_probs
+
+def predict_multi_genres(song, threshold=0.1):
+    probs = predict_genre_probabilities(song)
+    filtered = [(genre, prob) for genre, prob in probs.items() if prob >= threshold]
+    filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
+    predicted_genres = [genre for genre, _ in filtered_sorted]
+    return predicted_genres, dict(filtered_sorted)
+
+
+for i, song in data.iterrows():
+    if 'set()' in song['genre']:
+        print(song['song'])
+        print(predict_multi_genres(song))
