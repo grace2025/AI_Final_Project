@@ -12,7 +12,7 @@ df_new = df_new.reset_index(drop=True)
 df_new['explicit'] = df_new['explicit'].astype(int)
 
 
-df.to_csv('songs_clean.csv')
+df_new.to_csv('songs_clean.csv')
 
 print(df_new['genre'].value_counts())
 
