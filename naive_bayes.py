@@ -1,24 +1,20 @@
 ## Start with pre-processing of the csv files
 import pandas as pd 
 import numpy as np
-data = pd.read_csv("songs.csv")
+from config import features
 
-attributes = data.columns.tolist()
-data['genre_list'] = data['genre'].apply(
-    lambda x: [g.strip() for g in x.split(',') if g.strip() and g.strip() != 'set()']
-)
-all_genres = set(g for genres in data['genre_list'] for g in genres)
+from preprocessing import get_data, preprocess_data, transform_data
+X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
 
-comparable_attributes = attributes
-comparable_attributes.remove('artist')
+
+all_genres = list(set(y_train))
+comparable_attributes = features
 comparable_attributes.remove('song')
-comparable_attributes.remove('genre')
-binary_attributes = {'explicit', 'mode'}
 
 num_bins = 20
 genre_attribute_table = {
     genre: {
-        attr: ([0, 0] if attr in binary_attributes else [0]*num_bins) 
+        attr: ([0]*num_bins) 
         for attr in comparable_attributes
     } 
     for genre in all_genres
@@ -26,17 +22,17 @@ genre_attribute_table = {
 
 attribute_min_max = {}
 for attr in comparable_attributes:
-    if attr not in binary_attributes:
-        attribute_min_max[attr] = (data[attr].min(), data[attr].max())
+    idx = features.index(attr)
+    min_val = X_test[:, idx].min()
+    max_val = X_test[:, idx].max()
+    attribute_min_max[attr] = (min_val, max_val)
+
 
 bins = {}
 for attr in comparable_attributes:
-    if attr in binary_attributes:
-        bins[attr] = [0, 1]
-    else:
-        min, max = attribute_min_max[attr]
-        width = (max - min) / num_bins
-        bins[attr] = [min + i * width for i in range(num_bins + 1)]
+    min, max = attribute_min_max[attr]
+    width = (max - min) / num_bins
+    bins[attr] = [min + i * width for i in range(num_bins + 1)]
 
 def find_bin(val, boundaries):
     # For the binary attributes
@@ -61,11 +57,13 @@ def find_bin(val, boundaries):
                 return i
     return len(boundaries) - 2
 
-for _, song in data.iterrows():
-    for genre in song['genre_list']:
-        for attr in attributes:
-            bin_idx = find_bin(song[attr], bins[attr])
-            genre_attribute_table[genre][attr][bin_idx] += 1
+for i in range(len(X_train)):
+    song = X_train[i]
+    genre = y_train.iloc[i]
+
+    for j, attr in enumerate(comparable_attributes):
+        bin_idx = find_bin(song[j], bins[attr])
+        genre_attribute_table[genre][attr][bin_idx] += 1
 
 for genre in genre_attribute_table:
     for attr in genre_attribute_table[genre]:
@@ -83,7 +81,8 @@ def predict_genre_probabilities(song):
     for genre in genre_attribute_table:
         prob = 1.0
         for attr in comparable_attributes:
-            attr_val = song[attr]
+            idx = features.index(attr)
+            attr_val = song[idx]
             bin_idx = find_bin(attr_val, bins[attr])
             bin_probs = genre_attribute_table[genre][attr]
 
@@ -112,8 +111,10 @@ def predict_multi_genres(song, threshold=0.1):
     predicted_genres = [genre for genre, _ in filtered_sorted]
     return predicted_genres, dict(filtered_sorted)
 
+count = 0
+for j in range(len(X_test)):
+    print(f"{songs_test.iloc[j]} {predict_multi_genres(X_test[j])}")
+    count += 1
 
-for i, song in data.iterrows():
-    if 'set()' in song['genre']:
-        print(song['song'])
-        print(predict_multi_genres(song))
+print(count)
+
