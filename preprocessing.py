@@ -1,4 +1,5 @@
 import pandas as pd
+from config import features
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -29,31 +30,30 @@ def transform_data(filename, col):
 
 
 def preprocess_data(X, y):
+    songs = X['song'] 
+    X_features = X.drop(columns='song')
 
     scaler = StandardScaler()
-    scaler.fit(X)
-    X_scaled = scaler.transform(X)
+    scaler.fit(X_features)
+    X_scaled = scaler.transform(X_features)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled, y, test_size=0.2, stratify=y, random_state=42)
+    X_train, X_test, y_train, y_test, songs_train, songs_test = train_test_split(
+        X_scaled, y, songs, test_size=0.2, stratify=y, random_state=42
+    )
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, songs_train, songs_test
+
+def get_data():
+    df_clean = transform_data('songs.csv', 'genre')
+
+    df_clean['explicit'] = df_clean['explicit'].astype(int)
+    df_clean['mode'] = df_clean['mode'].astype(int)
 
 
+    # print(df_clean.columns)
+    # print(df_clean['genre'].value_counts())
 
+    X = df_clean[features]
+    y = df_clean['genre']
 
-df_clean = transform_data('songs.csv', 'genre')
-
-df_clean['explicit'] = df_clean['explicit'].astype(int)
-
-features = ['duration_ms', 'popularity', 'danceability', 'energy', 'loudness', 
-        'speechiness', 'acousticness', 'instrumentalness', 'liveness', 
-        'valence', 'tempo']
-
-# print(df_clean.columns)
-# print(df_clean['genre'].value_counts())
-
-X = df_clean[features]
-y = df_clean['genre']
-
-X_train, X_test, y_train, y_test = preprocess_data(X, y)
+    return preprocess_data(X, y)
