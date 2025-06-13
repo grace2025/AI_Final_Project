@@ -3,9 +3,10 @@
 from sklearn.svm import SVC
 import pandas as pd
 from preprocessing import transform_data, preprocess_data, get_data
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.multioutput import MultiOutputClassifier
 import numpy as np
+
 
 # ... should this be added to preprocessing ?
 def create_genre_vectors(songs_train, songs_test, df, genres):
@@ -53,8 +54,15 @@ def main():
 
     y_pred = model.predict(X_test)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    print(accuracy)
+
+    # will need to change below metrics to custom metrics
+    # accuracy = accuracy_score(y_test, y_pred)
+    # print(accuracy)
+
+    classification_metric = classification_report(y_test, y_pred, target_names=unique_genres)
+    print(classification_metric)
+
+
 
 if __name__ == "__main__":
     main()
