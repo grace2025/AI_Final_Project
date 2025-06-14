@@ -8,7 +8,7 @@ X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
 
 
 all_genres = list(set(y_train))
-comparable_attributes = features
+comparable_attributes = features.copy()
 comparable_attributes.remove('song')
 
 num_bins = 20
@@ -22,7 +22,7 @@ genre_attribute_table = {
 
 attribute_min_max = {}
 for attr in comparable_attributes:
-    idx = features.index(attr)
+    idx = comparable_attributes.index(attr)
     min_val = X_test[:, idx].min()
     max_val = X_test[:, idx].max()
     attribute_min_max[attr] = (min_val, max_val)
@@ -81,7 +81,7 @@ def predict_genre_probabilities(song):
     for genre in genre_attribute_table:
         prob = 1.0
         for attr in comparable_attributes:
-            idx = features.index(attr)
+            idx = comparable_attributes.index(attr)
             attr_val = song[idx]
             bin_idx = find_bin(attr_val, bins[attr])
             bin_probs = genre_attribute_table[genre][attr]
@@ -111,10 +111,4 @@ def predict_multi_genres(song, threshold=0.1):
     predicted_genres = [genre for genre, _ in filtered_sorted]
     return predicted_genres, dict(filtered_sorted)
 
-count = 0
-for j in range(len(X_test)):
-    print(f"{songs_test.iloc[j]} {predict_multi_genres(X_test[j])}")
-    count += 1
-
-print(count)
 
