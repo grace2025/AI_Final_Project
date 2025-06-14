@@ -297,8 +297,8 @@ def create_sample_dataset():
 
 def main():
     print("Loading and preprocessing data...")
-    # Adjust filename if necessary; default is 'songs.csv'
-    X_train, X_test, y_train, y_test, songs_train, songs_test = get_data('songs.csv')
+    # Call get_data() with no parameters (as defined in your preprocessing.py)
+    X_train, X_test, y_train, y_test, songs_train, songs_test = get_data()
 
     # Split validation set from training data
     X_train, X_val, y_train, y_val = train_test_split(
