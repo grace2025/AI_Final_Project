@@ -179,7 +179,9 @@ class MusicGenreClassifier:
         y_pred_classes = np.argmax(y_pred, axis=1)
 
         print("\nDetailed Classification Report:")
-        print(classification_report(y_test_enc, y_pred_classes, target_names=list(self.label_encoder.classes_)))
+        all_genres = list(set(y_train))
+        all_labels = self.label_encoder.transform(all_genres)
+        print(classification_report(y_test_enc, y_pred_classes, labels= all_labels, target_names=list(self.label_encoder.classes_)))
 
         cm = confusion_matrix(y_test_enc, y_pred_classes)
         plt.figure(figsize=(10, 8))
