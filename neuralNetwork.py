@@ -1,3 +1,45 @@
+## used claude ai for help with idea generation for this algorithm, troubleshooting, 
+## and to learn better how to implement a neural network AI algorithm.
+## we should change this more to fit our dataset, this is just a baseline and should be edited more before use!
+
+## CSV file needs columns:
+## artist: artist name
+## title: song title
+## genre: genre name
+## file_path: path to the audio file of song to be classified
+
+## I wasn't sure how to run this so these are the directions claude helped me with:
+
+## basic usage: 
+"""
+# Load data
+from preprocessing import get_data
+
+# get scaled training and test data
+X_train, X_test, y_train, y_test, songs_train, songs_test = get_data()
+
+
+# Initialize and train
+classifier = MusicGenreClassifier()
+
+# Save the model
+classifier.save_model('my_genre_classifier')
+
+## make predictions: 
+
+# Load trained model
+classifier = MusicGenreClassifier()
+classifier.load_model('my_genre_classifier')
+
+# Predict genre
+predictions = classifier.predict_genre('path/to/song.wav')
+for genre, confidence in predictions:
+    print(f"{genre}: {confidence:.3f}")
+
+
+"""
+
+## Neural Network code 
 from preprocessing import get_data
 import numpy as np
 import pandas as pd
@@ -94,30 +136,32 @@ class MusicGenreClassifier:
 
     # ---------- Model Building ----------
     def build_model(self, input_dim, num_classes):
-        model = keras.Sequential([
-            keras.layers.Dense(512, activation='relu', input_shape=(input_dim,),
-                               kernel_regularizer=keras.regularizers.l2(0.001)),
-            keras.layers.Dropout(0.3),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dense(256, activation='relu',
-                               kernel_regularizer=keras.regularizers.l2(0.001)),
-            keras.layers.Dropout(0.3),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dense(128, activation='relu',
-                               kernel_regularizer=keras.regularizers.l2(0.001)),
-            keras.layers.Dropout(0.2),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dense(64, activation='relu'),
-            keras.layers.Dropout(0.2),
-            keras.layers.Dense(num_classes, activation='softmax')
-        ])
-        optimizer = keras.optimizers.Adam(learning_rate=0.001)
-        model.compile(
-            optimizer=optimizer,
-            loss='sparse_categorical_crossentropy',
-            metrics=['accuracy']
-        )
-        return model
+    model = keras.Sequential([
+        keras.layers.Dense(512, activation='relu', input_shape=(input_dim,),
+                           kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.3),
+        keras.layers.BatchNormalization(),
+        keras.layers.Dense(256, activation='relu',
+                           kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.3),
+        keras.layers.BatchNormalization(),
+        keras.layers.Dense(128, activation='relu',
+                           kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.2),
+        keras.layers.BatchNormalization(),
+        keras.layers.Dense(64, activation='relu'),
+        keras.layers.Dropout(0.2),
+        keras.layers.Dense(num_classes, activation='softmax')
+    ])
+    
+    # Use an optimizer with gradient clipping (clipnorm=1.0 in this case)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0005, clipnorm=1.0)
+    model.compile(
+        optimizer=optimizer,
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    return model
 
     # ---------- Training ----------
     def train(self, X_train, y_train, X_val, y_val, X_test, y_test, epochs=150):
