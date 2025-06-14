@@ -17,6 +17,8 @@ def transform_data(filename, col):
     # if value count is 1 or less, remove
     unqiue_genres = df_clean[col].value_counts()
     model_genres = unqiue_genres[unqiue_genres >= 2].index
+    # removed_genres = unqiue_genres[unqiue_genres < 2].index
+    # print(removed_genres)
 
     df_clean = df_clean[df_clean[col].isin(model_genres)]
 
