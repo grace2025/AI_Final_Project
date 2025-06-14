@@ -24,7 +24,7 @@ def get_real_genres_map():
             song_to_genres[song] = set(genre_list)
     return song_to_genres
 
-def score_classifier(classifier):
+def score_classifier(classifier, score_type= 'standard'):
     real_genres_map = get_real_genres_map()
     svm_data = SVM.main()
     score = 0
@@ -37,10 +37,14 @@ def score_classifier(classifier):
         elif classifier == "NN":
             pred_genres = None
         real_genres = real_genres_map.get(song, set())
-        score += get_score(pred_genres, real_genres, song)
-    return score / len(X_test)
+        if score_type == "standard":
+            score += get_score_standard(pred_genres, real_genres, song)
+        elif score_type == "at least one":
+            score += get_score_at_lest_one(pred_genres, real_genres)
 
-def get_score(pred_genres, real_genres, song):
+    return round(score / len(X_test), 3)
+
+def get_score_standard(pred_genres, real_genres, song):
     if len(pred_genres) == 0:
         return 0
     d = len(real_genres)
@@ -54,6 +58,16 @@ def get_score(pred_genres, real_genres, song):
     return correct_score * incorrect_score  #If it only predicted genres in the real genres, incorrect_score = 1, 
                                             #ie. this penalizes for inccorect classifications
 
+def get_score_at_lest_one(pred_genres, real_genres):
+    for i in range(len(pred_genres)):
+        if pred_genres[i] in real_genres:
+            return 1
+    return 0
+    
+
 if __name__ == "__main__":
-    print(f"Naive Bayes score: {score_classifier('NB')}")
-    print(f"SVM score: {score_classifier('SVM')}")
+    print(f"Naive Bayes standard score: {score_classifier('NB')}")
+    print(f"SVM standard score: {score_classifier('SVM')}")
+    print(f"Naive Bayes at least one score: {score_classifier('NB', 'at least one')}")
+    print(f"SVM at least one score: {score_classifier('SVM', 'at least one')}")
+    
