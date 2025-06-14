@@ -136,32 +136,32 @@ class MusicGenreClassifier:
 
     # ---------- Model Building ----------
     def build_model(self, input_dim, num_classes):
-    model = keras.Sequential([
-        keras.layers.Dense(512, activation='relu', input_shape=(input_dim,),
-                           kernel_regularizer=keras.regularizers.l2(0.001)),
-        keras.layers.Dropout(0.3),
-        keras.layers.BatchNormalization(),
-        keras.layers.Dense(256, activation='relu',
-                           kernel_regularizer=keras.regularizers.l2(0.001)),
-        keras.layers.Dropout(0.3),
-        keras.layers.BatchNormalization(),
-        keras.layers.Dense(128, activation='relu',
-                           kernel_regularizer=keras.regularizers.l2(0.001)),
-        keras.layers.Dropout(0.2),
-        keras.layers.BatchNormalization(),
-        keras.layers.Dense(64, activation='relu'),
-        keras.layers.Dropout(0.2),
-        keras.layers.Dense(num_classes, activation='softmax')
-    ])
-    
-    # Use an optimizer with gradient clipping (clipnorm=1.0 in this case)
-    optimizer = keras.optimizers.Adam(learning_rate=0.0005, clipnorm=1.0)
-    model.compile(
-        optimizer=optimizer,
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
-    )
-    return model
+        model = keras.Sequential([
+            keras.layers.Dense(512, activation='relu', input_shape=(input_dim,),
+                            kernel_regularizer=keras.regularizers.l2(0.001)),
+            keras.layers.Dropout(0.3),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dense(256, activation='relu',
+                            kernel_regularizer=keras.regularizers.l2(0.001)),
+            keras.layers.Dropout(0.3),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dense(128, activation='relu',
+                            kernel_regularizer=keras.regularizers.l2(0.001)),
+            keras.layers.Dropout(0.2),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dense(64, activation='relu'),
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(num_classes, activation='softmax')
+        ])
+        
+        # Use an optimizer with gradient clipping (clipnorm=1.0 in this case)
+        optimizer = keras.optimizers.Adam(learning_rate=0.0005, clipnorm=1.0)
+        model.compile(
+            optimizer=optimizer,
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        return model
 
     # ---------- Training ----------
     def train(self, X_train, y_train, X_val, y_val, X_test, y_test, epochs=150):
