@@ -3,7 +3,7 @@
 from sklearn.svm import SVC
 import pandas as pd
 from preprocessing import transform_data, preprocess_data, get_data
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.multioutput import MultiOutputClassifier
 import numpy as np
 
@@ -28,7 +28,7 @@ def create_genre_vectors(songs_train, songs_test, df, genres):
     return np.array(y_train_vector_list), np.array(y_test_vector_list)
 
 
-def main():
+def run_svm(report=False, return_data=True):
 
     df = transform_data('songs.csv', 'genre')
 
@@ -47,22 +47,39 @@ def main():
         class_weight='balanced',
             kernel='rbf',
             gamma='scale',    # account for unbalanced data
-        random_state=42,), n_jobs=-1) #n_jobs=-1 trains all SVMs in parallel
+        random_state=42,), n_jobs=-1) # n_jobs=-1 trains all SVMs in parallel
 
 
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
 
+    if report==True:
+        classification_metric = classification_report(y_test, y_pred, target_names=unique_genres)
+        print(classification_metric)
 
-    # will need to change below metrics to custom metrics
-    # accuracy = accuracy_score(y_test, y_pred)
-    # print(accuracy)
+    if return_data==True:
+        results = {
+            'model': model,
+            'y_test': y_test,
+            'y_pred': y_pred,
+            'genres': unique_genres,
+            'songs_test': songs_test,
+            'X_test': X_test}
+        
+        pred_genres_dict = {}
 
-    classification_metric = classification_report(y_test, y_pred, target_names=unique_genres)
-    print(classification_metric)
-
-
-
+        for i, song in enumerate(results['songs_test']):
+            pred_genres = [results['genres'][j] for j, pred in enumerate(results['y_pred'][i]) if pred == 1]
+            pred_genres_dict[song] = pred_genres
+        
+        return results, pred_genres_dict
+    
 if __name__ == "__main__":
-    main()
+    
+    final_results = run_svm(report=False, return_data=True)
+    print(final_results[1])
+
+
+
+        # could output best genre confusion matrix for each classifier? see how differently pop is classified across all songs and classifiers?
