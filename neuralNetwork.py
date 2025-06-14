@@ -1,3 +1,45 @@
+## used claude ai for help with idea generation for this algorithm, troubleshooting, 
+## and to learn better how to implement a neural network AI algorithm.
+## we should change this more to fit our dataset, this is just a baseline and should be edited more before use!
+
+## CSV file needs columns:
+## artist: artist name
+## title: song title
+## genre: genre name
+## file_path: path to the audio file of song to be classified
+
+## I wasn't sure how to run this so these are the directions claude helped me with:
+
+## basic usage: 
+"""
+# Load data
+from preprocessing import get_data
+
+# get scaled training and test data
+X_train, X_test, y_train, y_test, songs_train, songs_test = get_data()
+
+
+# Initialize and train
+classifier = MusicGenreClassifier()
+
+# Save the model
+classifier.save_model('my_genre_classifier')
+
+## make predictions: 
+
+# Load trained model
+classifier = MusicGenreClassifier()
+classifier.load_model('my_genre_classifier')
+
+# Predict genre
+predictions = classifier.predict_genre('path/to/song.wav')
+for genre, confidence in predictions:
+    print(f"{genre}: {confidence:.3f}")
+
+
+"""
+
+## Neural Network code 
 from preprocessing import get_data
 import numpy as np
 import pandas as pd
