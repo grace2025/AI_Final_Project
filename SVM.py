@@ -75,10 +75,13 @@ def run_svm(report=False, return_data=True):
         
         return results, pred_genres_dict
     
-if __name__ == "__main__":
-    
+def main():
     final_results = run_svm(report=False, return_data=True)
-    print(final_results[1])
+    return final_results[1]
+    
+if __name__ == "__main__":
+    print(main())
+    
 
 
 
