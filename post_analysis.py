@@ -3,15 +3,39 @@ from preprocessing import get_data
 from naive_bayes import predict_multi_genres
 import pandas as pd
 import SVM
+from neural_network_updated import FromScratchNeuralNetwork
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import joblib
 
 df = pd.read_csv("songs.csv")
 X_train, X_test, y_train, y_test, songs_train, songs_test, X_val, y_val, songs_val = get_data()
 
-#for j in range(len(X_test)):
-#    print(f"{songs_test.iloc[j]} {predict_multi_genres(X_test[j])}, real genres: {df.loc[df['song'] == songs_test.iloc[j], 'genre'].values}")
+model_path = "trained_models/fromscratch_neural_network"
+
+# Load parts
+model_data = joblib.load(f"{model_path}_fromscratch_model.pkl")
+scaler = joblib.load(f"{model_path}_scaler.pkl")
+label_encoder = joblib.load(f"{model_path}_label_encoder.pkl")
+
+# Reconstruct the model
+nn = FromScratchNeuralNetwork(
+    architecture=model_data['architecture'],
+    learning_rate=model_data['learning_rate'],
+    dropout_rate=model_data['dropout_rate']
+)
+
+# Restore weights, biases, feature names
+nn.weights = model_data['weights']
+nn.biases = model_data['biases']
+nn.feature_columns = model_data['feature_columns']
+nn.scaler = scaler
+nn.label_encoder = label_encoder
+
+nn_preds = nn.predict_flexible(X_test, method='adaptive', threshold=0.3)
+
+svm_data = SVM.main()
 
 def get_real_genres_map():
     seen = set()
@@ -29,7 +53,6 @@ def get_real_genres_map():
 
 def score_classifier(classifier, score_type= 'standard'):
     real_genres_map = get_real_genres_map()
-    svm_data = SVM.main()
     score = 0
     for i in range(len(X_test)):
         song = songs_test.iloc[i]
@@ -38,7 +61,7 @@ def score_classifier(classifier, score_type= 'standard'):
         elif classifier == "SVM":
             pred_genres = svm_data[song]
         elif classifier == "NN":
-            pred_genres = None
+            pred_genres = nn_preds[i]
         real_genres = real_genres_map.get(song, set())
         if score_type == "standard":
             score += get_score_standard(pred_genres, real_genres, song)
@@ -124,9 +147,11 @@ def create_simple_visualization(classifiers):
 if __name__ == "__main__":
     print(f"Naive Bayes standard score: {score_classifier('NB')}")
     print(f"SVM standard score: {score_classifier('SVM')}")
+    print(f"NN standard score: {score_classifier('NN')}")
     print(f"Naive Bayes at least one score: {score_classifier('NB', 'at least one')}")
     print(f"SVM at least one score: {score_classifier('SVM', 'at least one')}")
+    print(f"NN at least one score: {score_classifier('NN', 'at least one')}")
     
-    classifiers = ['NB', 'SVM']
+    classifiers = ['NB', 'SVM', 'NN']
 
     create_simple_visualization(classifiers)
