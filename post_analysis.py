@@ -67,7 +67,7 @@ def get_score_at_lest_one(pred_genres, real_genres):
             return 1
     return 0
 
-def create_simple_visualization(classifiers):
+def create_visualization(classifiers):
     
     standard_scores = []
     at_least_one_scores = []
@@ -127,6 +127,6 @@ if __name__ == "__main__":
     print(f"Naive Bayes at least one score: {score_classifier('NB', 'at least one')}")
     print(f"SVM at least one score: {score_classifier('SVM', 'at least one')}")
     
-    classifiers = ['NB', 'SVM']  # Now includes all three
+    classifiers = ['NB', 'SVM']
 
-    create_simple_visualization(classifiers)
+    create_visualization(classifiers)
