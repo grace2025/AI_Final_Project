@@ -43,13 +43,22 @@ def preprocess_data(X, y):
         X_scaled, y, songs, test_size=0.2, stratify=y, random_state=42
     )
 
-    return X_train, X_test, y_train, y_test, songs_train, songs_test
+    X_train, X_val, y_train, y_val, songs_train, songs_val = train_test_split(
+        X_test, y_test, songs_test, test_size=0.25, random_state=42
+    )  # 60% train, 20% val, 20% test
+
+    # return X_train, X_test, y_train, y_test, songs_train, songs_test
+    return X_train, X_val, X_test, y_train, y_val, y_test, songs_train, songs_val, songs_test
+
 
 def get_data():
     df_clean = transform_data('songs.csv', 'genre')
 
     df_clean['explicit'] = df_clean['explicit'].astype(int)
     df_clean['mode'] = df_clean['mode'].astype(int)
+
+    df_clean['mode'] = df_clean['mode'].astype(int)
+
 
 
     # print(df_clean.columns)
