@@ -125,6 +125,14 @@ class MusicGenreClassifier:
         print("\nModel Architecture:")
         self.model.summary()
 
+        # Compute class weights to address imbalance
+        from sklearn.utils.class_weight import compute_class_weight
+        import numpy as np
+        classes = np.unique(y_train_enc)
+        class_weights = compute_class_weight('balanced', classes=classes, y=y_train_enc)
+        class_weight_dict = dict(zip(classes, class_weights))
+        print("\nClass Weights:", class_weight_dict)
+
         early_stopping = keras.callbacks.EarlyStopping(
             monitor='val_accuracy', patience=20, restore_best_weights=True, verbose=1
         )
@@ -139,6 +147,7 @@ class MusicGenreClassifier:
             epochs=epochs,
             batch_size=32,
             callbacks=[early_stopping, reduce_lr],
+            class_weight=class_weight_dict,  # Using class weights here
             verbose=1
         )
 
@@ -152,7 +161,6 @@ class MusicGenreClassifier:
         y_pred = self.model.predict(X_test_scaled, verbose=0)
         y_pred_classes = np.argmax(y_pred, axis=1)
         print("\nDetailed Classification Report:")
-        # Get a sorted list of genres from the training labels
         all_genres = list(set(y_train))
         all_labels = self.label_encoder.transform(all_genres)
         print(classification_report(y_test_enc, y_pred_classes, labels=all_labels,
@@ -171,6 +179,7 @@ class MusicGenreClassifier:
 
         self.plot_training_history()
         return self.history
+
 
     # ---------- Training History Plot ----------
     def plot_training_history(self):
