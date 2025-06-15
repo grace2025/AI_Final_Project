@@ -2,14 +2,6 @@
 ## and to learn better how to implement a neural network AI algorithm.
 ## we should change this more to fit our dataset, this is just a baseline and should be edited more before use!
 
-## CSV file needs columns:
-## artist: artist name
-## title: song title
-## genre: genre name
-## file_path: path to the audio file of song to be classified
-
-## I wasn't sure how to run this so these are the directions claude helped me with:
-
 ## basic usage: 
 """
 # Load data
@@ -138,15 +130,15 @@ class MusicGenreClassifier:
     def build_model(self, input_dim, num_classes):
         model = keras.Sequential([
             keras.layers.Dense(512, activation='relu', input_shape=(input_dim,),
-                            kernel_regularizer=keras.regularizers.l2(0.001)),
+                               kernel_regularizer=keras.regularizers.l2(0.001)),
             keras.layers.Dropout(0.3),
             keras.layers.BatchNormalization(),
             keras.layers.Dense(256, activation='relu',
-                            kernel_regularizer=keras.regularizers.l2(0.001)),
+                               kernel_regularizer=keras.regularizers.l2(0.001)),
             keras.layers.Dropout(0.3),
             keras.layers.BatchNormalization(),
             keras.layers.Dense(128, activation='relu',
-                            kernel_regularizer=keras.regularizers.l2(0.001)),
+                               kernel_regularizer=keras.regularizers.l2(0.001)),
             keras.layers.Dropout(0.2),
             keras.layers.BatchNormalization(),
             keras.layers.Dense(64, activation='relu'),
@@ -225,7 +217,7 @@ class MusicGenreClassifier:
         print("\nDetailed Classification Report:")
         all_genres = list(set(y_train))
         all_labels = self.label_encoder.transform(all_genres)
-        print(classification_report(y_test_enc, y_pred_classes, labels= all_labels, target_names=list(self.label_encoder.classes_)))
+        print(classification_report(y_test_enc, y_pred_classes, labels=all_labels, target_names=list(self.label_encoder.classes_)))
 
         cm = confusion_matrix(y_test_enc, y_pred_classes)
         plt.figure(figsize=(10, 8))
@@ -268,7 +260,7 @@ class MusicGenreClassifier:
         plt.tight_layout()
         plt.show()
 
-    # ---------- Prediction ----------
+    # ---------- Prediction for a Single File ----------
     def predict_genre(self, audio_file_path, top_n=3):
         if self.model is None:
             raise ValueError("The model is not trained yet. Call train() first.")
@@ -295,6 +287,35 @@ class MusicGenreClassifier:
             confidence = predictions[idx]
             results.append((genre, confidence))
         return results
+
+    # ---------- Batch Prediction for Multiple Files ----------
+    def predict_genres_for_files(self, audio_file_paths, top_n=3):
+        """
+        Given a list of audio file paths, predict genres for each file.
+        Returns a dictionary mapping each file path to its list of (genre, confidence) tuples.
+        """
+        predictions_dict = {}
+        for file_path in audio_file_paths:
+            result = self.predict_genre(file_path, top_n=top_n)
+            predictions_dict[file_path] = result
+        return predictions_dict
+
+    # ---------- Predict and Save Predictions for an Input File ----------
+    def predict_and_save_file(self, input_csv, output_csv, top_n=3):
+        """
+        Reads an input CSV with a column 'file_path', predicts genres for each file, 
+        and writes the results to a new CSV.
+        A new column 'predicted_genres' is added with the list of (genre, confidence) tuples.
+        """
+        df = pd.read_csv(input_csv)
+        predictions_list = []
+        for idx, row in df.iterrows():
+            file_path = row['file_path']
+            preds = self.predict_genre(file_path, top_n=top_n)
+            predictions_list.append(preds)
+        df['predicted_genres'] = predictions_list
+        df.to_csv(output_csv, index=False)
+        print(f"Predictions saved to {output_csv}")
 
     # ---------- Save and Load Model ----------
     def save_model(self, model_path):
@@ -357,7 +378,7 @@ def main():
     # Save the trained model
     classifier.save_model("trained_models/music_genre_classifier")
 
-    # Example prediction (replace with an actual file path)
+    # Optionally, perform single-file and batch predictions here, if desired:
     test_file = 'path/to/test_audio.wav'
     if os.path.exists(test_file):
         predictions = classifier.predict_genre(test_file)
@@ -366,6 +387,11 @@ def main():
             for i, (genre, confidence) in enumerate(predictions, 1):
                 print(f"  {i}. {genre}: {confidence:.3f} ({confidence * 100:.1f}%)")
 
+    # Example: Automatically predict genres for all songs in an input CSV and save to a new CSV.
+    # (Ensure the input CSV contains the 'file_path' column.)
+    input_csv = 'songs.csv'          # Replace with your input CSV file path
+    output_csv = 'songs_predictions.csv'  # The new CSV file to store predictions
+    classifier.predict_and_save_file(input_csv, output_csv)
 
 def load_and_predict_example():
     """
@@ -379,7 +405,6 @@ def load_and_predict_example():
         print(f"Predictions for {audio_file}:")
         for genre, confidence in predictions:
             print(f"  {genre}: {confidence:.3f} ({confidence * 100:.1f}%)")
-
 
 if __name__ == "__main__":
     main()
