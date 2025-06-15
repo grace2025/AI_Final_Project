@@ -127,6 +127,6 @@ if __name__ == "__main__":
     print(f"Naive Bayes at least one score: {score_classifier('NB', 'at least one')}")
     print(f"SVM at least one score: {score_classifier('SVM', 'at least one')}")
     
-    classifiers = ['NB', 'SVM']
+    classifiers = ['NB', 'SVM']  # Now includes all three
 
     create_simple_visualization(classifiers)
