@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from preprocessing import get_data, preprocess_data, transform_data
-X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
+# X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
+X_train, X_test, y_train, y_test, songs_train, songs_test, _, _, _ = get_data()
 
 
 all_genres = list(set(y_train))
