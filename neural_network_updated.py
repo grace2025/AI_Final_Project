@@ -43,10 +43,8 @@ class FromScratchNeuralNetwork:
     def relu_derivative(self, x):
         return (x > 0).astype(float)
 
-    def softmax(self, x):
-        x_shifted = x - np.max(x, axis=1, keepdims=True)
-        exp_x = np.exp(np.clip(x_shifted, -500, 500))
-        return exp_x / (np.sum(exp_x, axis=1, keepdims=True) + 1e-15)
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
 
     def forward_pass(self, X, training=True):
         activations = [X]
@@ -59,8 +57,9 @@ class FromScratchNeuralNetwork:
                 a = a * dropout_mask
             activations.append(a)
             current_input = a
+        # Final layer now uses sigmoid instead of softmax.
         z_output = np.dot(current_input, self.weights[-1]) + self.biases[-1]
-        output = self.softmax(z_output)
+        output = self.sigmoid(z_output)
         activations.append(output)
         return output, activations
 
@@ -68,12 +67,10 @@ class FromScratchNeuralNetwork:
         m = X.shape[0]
         weight_gradients = []
         bias_gradients = []
-        # Compute error at output
+        # For binary cross entropy with sigmoid, derivative is (prediction - y)
         delta = activations[-1] - y  # shape: (m, num_classes)
-        # Multiply each sample's error by its corresponding weight if provided
         if sample_weights is not None:
             delta = delta * sample_weights.reshape(-1, 1)
-        # Backpropagation for all layers
         for i in reversed(range(len(self.weights))):
             dW = np.dot(activations[i].T, delta) / m
             db = np.sum(delta, axis=0, keepdims=True) / m
@@ -90,14 +87,23 @@ class FromScratchNeuralNetwork:
 
     def compute_loss(self, predictions, y_true):
         m = y_true.shape[0]
+        # Clip predictions to avoid log(0)
         predictions = np.clip(predictions, 1e-15, 1 - 1e-15)
-        loss = -np.sum(y_true * np.log(predictions)) / m
+        # Binary cross entropy loss
+        loss = -np.sum(y_true * np.log(predictions) + (1 - y_true) * np.log(1 - predictions)) / m
         return loss
 
-    def compute_accuracy(self, predictions, y_true):
-        pred_classes = np.argmax(predictions, axis=1)
-        true_classes = np.argmax(y_true, axis=1)
-        return np.mean(pred_classes == true_classes)
+    def compute_accuracy(self, predictions, y_true, threshold=0.5):
+        """
+        Compute accuracy for multi-label classification using Hamming accuracy
+        """
+        # Convert probabilities to binary predictions
+        pred_binary = (predictions >= threshold).astype(int)
+        
+        # Hamming accuracy: average accuracy across all labels
+        hamming_acc = np.mean(pred_binary == y_true)
+        
+        return hamming_acc
 
     def to_one_hot(self, y, num_classes):
         one_hot = np.zeros((len(y), num_classes))
@@ -105,7 +111,6 @@ class FromScratchNeuralNetwork:
         return one_hot
 
     def compute_class_weights(self, y_enc):
-        # Compute weights inversely proportional to class frequencies
         classes, counts = np.unique(y_enc, return_counts=True)
         total = len(y_enc)
         class_weights = {c: total / (len(classes) * count) for c, count in zip(classes, counts)}
@@ -153,7 +158,6 @@ class FromScratchNeuralNetwork:
 
         # Training loop
         for epoch in range(epochs):
-            # Shuffle the training data at each epoch
             permutation = np.random.permutation(n_samples)
             X_shuffled = X_train_scaled[permutation]
             y_shuffled = y_train_onehot[permutation]
@@ -167,7 +171,6 @@ class FromScratchNeuralNetwork:
                 X_batch = X_shuffled[start:end]
                 y_batch = y_shuffled[start:end]
                 if use_class_weights:
-                    # Compute sample weight for each sample in the batch
                     sample_weights = np.array([class_weight_dict[label] for label in y_shuffled_labels[start:end]])
                 else:
                     sample_weights = None
@@ -258,14 +261,69 @@ class FromScratchNeuralNetwork:
         plt.tight_layout()
         plt.show()
 
-    def predict(self, X):
+    def predict(self, X, threshold=0.5):  # Changed from 0.3 to 0.5
+        """
+        Return multiple genres per song based on threshold
+        """
         if isinstance(X, pd.DataFrame):
             X = X[self.feature_columns].values
         X_scaled = self.scaler.transform(X)
         predictions, _ = self.forward_pass(X_scaled, training=False)
-        pred_classes = np.argmax(predictions, axis=1)
-        predicted_labels = self.label_encoder.inverse_transform(pred_classes)
-        return predicted_labels
+        
+        predicted_list = []
+        for i in range(predictions.shape[0]):
+            # Get all genres above threshold
+            indices = np.where(predictions[i] >= threshold)[0]
+            
+            # If no genres meet threshold, take the top one
+            if indices.size == 0:
+                indices = np.array([np.argmax(predictions[i])])
+            
+            genres = list(self.label_encoder.classes_[indices])
+            predicted_list.append(genres)
+        
+        return predicted_list
+    
+    def predict_flexible(self, X, method='threshold', threshold=0.4, top_k=2):
+        """
+        Flexible prediction method with multiple strategies
+        
+        Args:
+            X: Input features
+            method: 'threshold', 'top_k', or 'adaptive'
+            threshold: Probability threshold for 'threshold' method
+            top_k: Number of top genres for 'top_k' method
+        """
+        if isinstance(X, pd.DataFrame):
+            X = X[self.feature_columns].values
+        X_scaled = self.scaler.transform(X)
+        predictions, _ = self.forward_pass(X_scaled, training=False)
+        
+        predicted_list = []
+        
+        for i in range(predictions.shape[0]):
+            if method == 'threshold':
+                indices = np.where(predictions[i] >= threshold)[0]
+                if indices.size == 0:
+                    indices = np.array([np.argmax(predictions[i])])
+                    
+            elif method == 'top_k':
+                indices = np.argsort(predictions[i])[-top_k:][::-1]
+                
+            elif method == 'adaptive':
+                # Adaptive: use threshold, but ensure at least one and at most 3 genres
+                indices = np.where(predictions[i] >= threshold)[0]
+                if indices.size == 0:
+                    indices = np.array([np.argmax(predictions[i])])
+                elif indices.size > 3:
+                    # Take top 3 if too many
+                    top_indices = np.argsort(predictions[i][indices])[-3:][::-1]
+                    indices = indices[top_indices]
+            
+            genres = list(self.label_encoder.classes_[indices])
+            predicted_list.append(genres)
+        
+        return predicted_list
 
     def save_model(self, model_path):
         import os
@@ -310,16 +368,23 @@ def main():
     nn.save_model("trained_models/fromscratch_neural_network")
 
     print("Making sample predictions...")
-    # Use first 10 samples for illustration
-    sample_preds = nn.predict(pd.DataFrame(X_test[:10], columns=nn.feature_columns))
+    sample_data = pd.DataFrame(X_test[:10], columns=nn.feature_columns)
+    sample_preds = nn.predict_flexible(sample_data, method='adaptive', threshold=0.3)
+
     print("\nSample predictions:")
     print("-" * 30)
     for i, pred in enumerate(sample_preds, 1):
         if songs_test is not None and len(songs_test) >= 10:
             songs_list = songs_test.tolist() if hasattr(songs_test, 'tolist') else list(songs_test)
-            print(f"{i:2d}. {songs_list[i-1]}: Predicted = {pred}")
+            song_name = songs_list[i-1]
         else:
-            print(f"{i:2d}. Predicted = {pred}")
+            song_name = f"Song {i}"
+            
+        if len(pred) == 1:
+            print(f"{i:2d}. {song_name}: {pred[0]}")
+        else:
+            genres_str = ", ".join(pred)
+            print(f"{i:2d}. {song_name}: {genres_str}")
 
 
 if __name__ == "__main__":
