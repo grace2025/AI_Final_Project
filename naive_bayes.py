@@ -2,6 +2,8 @@
 import pandas as pd 
 import numpy as np
 from config import features
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from preprocessing import get_data, preprocess_data, transform_data
 X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
@@ -20,6 +22,7 @@ genre_attribute_table = {
     for genre in all_genres
 }
 
+# Determines range for bins
 attribute_min_max = {}
 for attr in comparable_attributes:
     idx = comparable_attributes.index(attr)
@@ -34,6 +37,9 @@ for attr in comparable_attributes:
     width = (max - min) / num_bins
     bins[attr] = [min + i * width for i in range(num_bins + 1)]
 
+"""
+Method to find the bin a score corresponds to
+"""
 def find_bin(val, boundaries):
     # For the binary attributes
     if len(boundaries) == 2:
@@ -75,6 +81,9 @@ for genre in genre_attribute_table:
             genre_attribute_table[genre][attr] = [0 for _ in bin_counts]
 
 
+"""
+Method to predict the probabilities of each genre for a song
+"""
 def predict_genre_probabilities(song):
     genre_probs = {}
 
@@ -111,4 +120,43 @@ def predict_multi_genres(song, threshold=0.1):
     predicted_genres = [genre for genre, _ in filtered_sorted]
     return predicted_genres, dict(filtered_sorted)
 
+"""
+Method for plotting the distribution of a specific attribute for visualization purposes
+"""
+def plot_attribute_distribution(attr, genres_to_plot=None):
+    if genres_to_plot is None:
+        genres_to_plot = list(genre_attribute_table.keys())[:12]  # all
+    
+    plt.figure(figsize=(12, 8))
 
+    for genre in genres_to_plot:
+        bin_probs = genre_attribute_table[genre][attr]
+        plt.plot(range(len(bin_probs)), bin_probs, marker='o', label=genre)
+    
+    plt.xticks(ticks=list(range(len(bin_probs))))
+    plt.title(f"Distribution of attribute '{attr}' across genres")
+    plt.xlabel("Bin Index")
+    plt.ylabel("Probability")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+"""
+Method for plotting a heat map of attributes for a specific genre for visualization purposes
+"""
+def plot_genre_heatmap(genre):
+    data = []
+    for attr in comparable_attributes:
+        data.append(genre_attribute_table[genre][attr])
+    
+    plt.figure(figsize=(14, 8))
+    sns.heatmap(data, cmap="YlGnBu", xticklabels=False, yticklabels=comparable_attributes)
+    plt.title(f"Heatmap of bin probabilities for genre: {genre}")
+    plt.xlabel("Bin Index")
+    plt.ylabel("Attribute")
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    plot_attribute_distribution(comparable_attributes[0])
