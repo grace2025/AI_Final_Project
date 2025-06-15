@@ -348,11 +348,7 @@ def main():
     print("No TensorFlow, PyTorch, or scikit‑learn neural networks!")
     print("Everything implemented from scratch using only NumPy\n")
     print("Loading data...")
-    X_train, X_test, y_train, y_test, songs_train, songs_test = get_data()
-    print("Creating validation split...")
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train, test_size=0.2, stratify=y_train, random_state=42
-    )
+    X_train, X_test, y_train, y_test, songs_train, songs_test, X_val, y_val, songs_test = get_data()
 
     print("Initializing neural network...")
     nn = FromScratchNeuralNetwork(
