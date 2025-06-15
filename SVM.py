@@ -6,6 +6,7 @@ from preprocessing import transform_data, preprocess_data, get_data
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.multioutput import MultiOutputClassifier
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # ... should this be added to preprocessing ?
@@ -54,10 +55,6 @@ def run_svm(report=False, return_data=True):
 
     y_pred = model.predict(X_test)
 
-    if report==True:
-        classification_metric = classification_report(y_test, y_pred, target_names=unique_genres)
-        print(classification_metric)
-
     if return_data==True:
         results = {
             'model': model,
@@ -73,10 +70,16 @@ def run_svm(report=False, return_data=True):
             pred_genres = [results['genres'][j] for j, pred in enumerate(results['y_pred'][i]) if pred == 1]
             pred_genres_dict[song] = pred_genres
         
-        return results, pred_genres_dict
+        if report == True:
+            classification_metric = classification_report(y_test, y_pred, target_names=unique_genres, output_dict=True)
+            print(classification_metric)
+            return results, pred_genres_dict, classification_metric
+        else:
+            return results, pred_genres_dict
+            
     
 def main():
-    final_results = run_svm(report=False, return_data=True)
+    final_results = run_svm(report=True, return_data=True)
     return final_results[1]
     
 if __name__ == "__main__":
