@@ -2,13 +2,16 @@
 import pandas as pd 
 import numpy as np
 from config import features
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from preprocessing import get_data, preprocess_data, transform_data
-X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
+# X_train, X_test, y_train, y_test, songs_train, songs_test= get_data()
+X_train, X_test, y_train, y_test, songs_train, songs_test, _, _, _ = get_data()
 
 
 all_genres = list(set(y_train))
-comparable_attributes = features
+comparable_attributes = features.copy()
 comparable_attributes.remove('song')
 
 num_bins = 20
@@ -20,9 +23,10 @@ genre_attribute_table = {
     for genre in all_genres
 }
 
+# Determines range for bins
 attribute_min_max = {}
 for attr in comparable_attributes:
-    idx = features.index(attr)
+    idx = comparable_attributes.index(attr)
     min_val = X_test[:, idx].min()
     max_val = X_test[:, idx].max()
     attribute_min_max[attr] = (min_val, max_val)
@@ -34,6 +38,9 @@ for attr in comparable_attributes:
     width = (max - min) / num_bins
     bins[attr] = [min + i * width for i in range(num_bins + 1)]
 
+"""
+Method to find the bin a score corresponds to
+"""
 def find_bin(val, boundaries):
     # For the binary attributes
     if len(boundaries) == 2:
@@ -75,13 +82,16 @@ for genre in genre_attribute_table:
             genre_attribute_table[genre][attr] = [0 for _ in bin_counts]
 
 
+"""
+Method to predict the probabilities of each genre for a song
+"""
 def predict_genre_probabilities(song):
     genre_probs = {}
 
     for genre in genre_attribute_table:
         prob = 1.0
         for attr in comparable_attributes:
-            idx = features.index(attr)
+            idx = comparable_attributes.index(attr)
             attr_val = song[idx]
             bin_idx = find_bin(attr_val, bins[attr])
             bin_probs = genre_attribute_table[genre][attr]
@@ -111,10 +121,43 @@ def predict_multi_genres(song, threshold=0.1):
     predicted_genres = [genre for genre, _ in filtered_sorted]
     return predicted_genres, dict(filtered_sorted)
 
-count = 0
-for j in range(len(X_test)):
-    print(f"{songs_test.iloc[j]} {predict_multi_genres(X_test[j])}")
-    count += 1
+"""
+Method for plotting the distribution of a specific attribute for visualization purposes
+"""
+def plot_attribute_distribution(attr, genres_to_plot=None):
+    if genres_to_plot is None:
+        genres_to_plot = list(genre_attribute_table.keys())[:12]  # all
+    
+    plt.figure(figsize=(12, 8))
 
-print(count)
+    for genre in genres_to_plot:
+        bin_probs = genre_attribute_table[genre][attr]
+        plt.plot(range(len(bin_probs)), bin_probs, marker='o', label=genre)
+    
+    plt.xticks(ticks=list(range(len(bin_probs))))
+    plt.title(f"Distribution of attribute '{attr}' across genres")
+    plt.xlabel("Bin Index")
+    plt.ylabel("Probability")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
+"""
+Method for plotting a heat map of attributes for a specific genre for visualization purposes
+"""
+def plot_genre_heatmap(genre):
+    data = []
+    for attr in comparable_attributes:
+        data.append(genre_attribute_table[genre][attr])
+    
+    plt.figure(figsize=(14, 8))
+    sns.heatmap(data, cmap="YlGnBu", xticklabels=False, yticklabels=comparable_attributes)
+    plt.title(f"Heatmap of bin probabilities for genre: {genre}")
+    plt.xlabel("Bin Index")
+    plt.ylabel("Attribute")
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    plot_attribute_distribution(comparable_attributes[0])

@@ -29,36 +29,28 @@ def create_genre_vectors(songs_train, songs_test, df, genres):
 
 
 def run_svm(report=False, return_data=True):
-
     df = transform_data('songs.csv', 'genre')
-
-    X_train, X_test, _, _, songs_train, songs_test = get_data()  
+    X_train, X_test, _, _, songs_train, songs_test, X_val, _, songs_val = get_data()
 
     unique_genres = df['genre'].unique().tolist()
-
-    y_train, y_test = create_genre_vectors(
-        songs_train=songs_train,
-        songs_test=songs_test, 
-        df=df,
-        genres=unique_genres)
-
-
+    y_train, y_test = create_genre_vectors(songs_train, songs_test, df, unique_genres)
+    y_train_full, y_val = create_genre_vectors(songs_train, songs_val, df, unique_genres)
+    
     model = MultiOutputClassifier(SVC(
-        class_weight='balanced',
-            kernel='rbf',
-            gamma='scale',    # account for unbalanced data
-        random_state=42,), n_jobs=-1) # n_jobs=-1 trains all SVMs in parallel
-
-
-    model.fit(X_train, y_train)
-
+            class_weight='balanced', 
+            random_state=42, 
+            C=10,
+            gamma='scale',
+            kernel='rbf'), n_jobs=-1)
+    
+    X_train_full = np.vstack([X_train, X_val])
+    y_train_combined = np.vstack([y_train, y_val])
+    
+    model.fit(X_train_full, y_train_combined)
+    
     y_pred = model.predict(X_test)
 
-    if report==True:
-        classification_metric = classification_report(y_test, y_pred, target_names=unique_genres)
-        print(classification_metric)
-
-    if return_data==True:
+    if return_data == True:
         results = {
             'model': model,
             'y_test': y_test,
@@ -68,17 +60,25 @@ def run_svm(report=False, return_data=True):
             'X_test': X_test}
         
         pred_genres_dict = {}
-
         for i, song in enumerate(results['songs_test']):
             pred_genres = [results['genres'][j] for j, pred in enumerate(results['y_pred'][i]) if pred == 1]
             pred_genres_dict[song] = pred_genres
         
-        return results, pred_genres_dict
+        if report == True:
+            classification_metrics = classification_report(y_test, y_pred, target_names=unique_genres, output_dict=True, zero_division=0)
+            print(classification_metrics)
+            return results, pred_genres_dict, classification_metrics
+        else:
+            return results, pred_genres_dict
+            
+    
+def main():
+    final_results = run_svm(report=True, return_data=True)
+    return final_results[1] #pred_genres_dict
     
 if __name__ == "__main__":
+    print(main())
     
-    final_results = run_svm(report=False, return_data=True)
-    print(final_results[1])
 
 
 

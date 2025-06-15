@@ -39,11 +39,17 @@ def preprocess_data(X, y):
     scaler.fit(X_features)
     X_scaled = scaler.transform(X_features)
 
-    X_train, X_test, y_train, y_test, songs_train, songs_test = train_test_split(
+    X_temp, X_test, y_temp, y_test, songs_temp, songs_test = train_test_split(
         X_scaled, y, songs, test_size=0.2, stratify=y, random_state=42
     )
 
-    return X_train, X_test, y_train, y_test, songs_train, songs_test
+    X_train, X_val, y_train, y_val, songs_train, songs_val = train_test_split(
+        X_temp, y_temp, songs_temp, test_size=0.25, random_state=42
+    )  # 60% train, 20% val, 20% test
+
+    # return X_train, X_test, y_train, y_test, songs_train, songs_test
+    return X_train, X_test, y_train, y_test, songs_train, songs_test, X_val, y_val, songs_val
+
 
 def get_data():
     df_clean = transform_data('songs.csv', 'genre')
