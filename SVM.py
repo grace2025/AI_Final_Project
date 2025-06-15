@@ -66,7 +66,7 @@ def run_svm(report=False, return_data=True):
         
         if report == True:
             classification_metrics = classification_report(y_test, y_pred, target_names=unique_genres, output_dict=True, zero_division=0)
-            print(classification_metrics)
+            #print(classification_metrics)
             return results, pred_genres_dict, classification_metrics
         else:
             return results, pred_genres_dict
@@ -77,7 +77,7 @@ def main():
     return final_results[1] #pred_genres_dict
     
 if __name__ == "__main__":
-    print(main())
+    main()
     
 
 
