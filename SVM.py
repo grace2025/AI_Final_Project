@@ -30,7 +30,7 @@ def create_genre_vectors(songs_train, songs_test, df, genres):
 
 def run_svm(report=False, return_data=True):
     df = transform_data('songs.csv', 'genre')
-    X_train, X_val, X_test, _, _, _, songs_train, songs_val, songs_test = get_data()
+    X_train, X_test, _, _, songs_train, songs_test, X_val, _, songs_val = get_data()
 
     unique_genres = df['genre'].unique().tolist()
     y_train, y_test = create_genre_vectors(songs_train, songs_test, df, unique_genres)

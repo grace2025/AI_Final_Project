@@ -48,7 +48,7 @@ def preprocess_data(X, y):
     )  # 60% train, 20% val, 20% test
 
     # return X_train, X_test, y_train, y_test, songs_train, songs_test
-    return X_train, X_val, X_test, y_train, y_val, y_test, songs_train, songs_val, songs_test
+    return X_train, X_test, y_train, y_test, songs_train, songs_test, X_val, y_val, songs_val
 
 
 def get_data():
@@ -56,9 +56,6 @@ def get_data():
 
     df_clean['explicit'] = df_clean['explicit'].astype(int)
     df_clean['mode'] = df_clean['mode'].astype(int)
-
-    df_clean['mode'] = df_clean['mode'].astype(int)
-
 
 
     # print(df_clean.columns)
