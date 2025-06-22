@@ -1,5 +1,4 @@
-# AI_Final_Project: Finding the Best Genre Prediction Model
-### Anna Birge, Grace Bhagat, Zach Paquette, Hannah Storer
+# Finding the Best Genre Prediction Model
 
 This is a Python project that compares different classifiers to determine the best classifier that predicts a songs genres. The data is pulled from Kaggle which originally pulled the data from Spotify.
 
