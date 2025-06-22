@@ -9,6 +9,7 @@ Kaggle data: https://www.kaggle.com/code/varunsaikanuri/spotify-data-visualizati
   - Neural Network
   - Naive Bayes
   - SVM
+
 Neural Networks Classifier and the Naive Bayes Classifier are implemented from scratch. SVMs Classifier will use the sklearn model.
 
 
