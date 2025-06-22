@@ -52,16 +52,17 @@ Make sure you have Python 3.8+ installed. Then, install the dependencies listed 
 pip install -r requirements.txt
 ```
 
-#### Step 3: 
+#### Step 3: Run ```preprocessing.py```
+This script will pull the ```songs.csv``` file, horizontally transform the data to contain one genre in each row, remove genres with <1 counts and split the data to prep it as input for the models. This script outputs a ```songs_clean.csv``` file.
+```
+python preprocessing.py
+```
 
-
-#### Step 4:
-
-
-#### Step 5: View Results
-
-
-
+#### Step 4: Run ```post_analysis.py```
+This script calls each classifier and calculates an overall accuracy score allowing for consistent comparisions across classifiers. This script outputs two visualizations showing the outcomes of the three classifier's overall accuracy and accuracy in predicting at least one genre correctly.
+```
+python post_analysis.py
+```
 
 
 ## Collaborators
@@ -70,14 +71,3 @@ The following individuals contributed to the development of this project:
 2. Zachary Parquette
 3. Grace Bhagat
 4. Hannah Storer
-
-
-## *Delete below sections in final README*
- ### README Instructions:
-  - All repositories must also include a detailed Read-Me file with instructions to recreate an appropriate environment and any necessary packages, and a walkthrough on how to run your code. Jupyter notebooks are not an acceptable submission format for the final project, but may be used solely for any data cleaning and preprocessing steps. If so, include the notebook and detailed documentation for the user in your GitHub repository.
-
-
-### TO DO
-- Determine standardized performance metrics to measure for each model
-- Add findings to the presentation
-- ... ?
